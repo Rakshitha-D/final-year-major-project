@@ -90,6 +90,62 @@ def match():
             cursor = conn.cursor()
             cursor.execute("SELECT url FROM register WHERE id = %s", (str(match_label+1),))
             matched_image_path = cursor.fetchone()
+            cursor.execute("SELECT label, place, date FROM register WHERE url = %s", (matched_image_path,))
+            matched_image_details = cursor.fetchone()
+            cursor.close()
+            conn.close()
+        
+        os.remove(temp_image_path)  # Clean up temporary file
+
+        if isinstance(matched_image_path, tuple):
+            matched_image_path = matched_image_path[0]
+
+        if matched_image_details:
+            name, place, date = matched_image_details
+        else:
+            name, place, date = None, None, None
+
+        try:
+            img = Image.open(matched_image_path)
+        except Exception as e:
+            print(f"Error opening image: {e}")
+            raise
+        
+        if match_probability > 0.8:
+            status = "Exact match found"
+        elif match_probability > 0.5:
+            status = "Probable match found"
+        else:
+            status = "No match found"
+
+        return jsonify({
+            'name': name,
+            'place': place,
+            'date': date,
+            'status': status,
+            'matched_label': match_label,
+            'matched_probability': match_probability,
+            'matched_image_url': matched_image_path if match_probability > 0.5 else None
+            
+        })
+    return jsonify({'error': 'No image provided'}), 400
+"""
+@app.route('/match', methods=['POST'])
+def match():
+    image_file = request.files['image']
+    if image_file.filename != '':
+        temp_image_path = os.path.join(app.config['UPLOAD_FOLDER'], 'temp', image_file.filename)
+        os.makedirs(os.path.dirname(temp_image_path), exist_ok=True)
+        image_file.save(temp_image_path)
+        
+        match_label, match_probability = find_match(temp_image_path)
+        matched_image_path = None
+        
+        if match_label != "No face detected":
+            conn = connect_to_database()
+            cursor = conn.cursor()
+            cursor.execute("SELECT url FROM register WHERE id = %s", (str(match_label+1),))
+            matched_image_path = cursor.fetchone()
             cursor.close()
             conn.close()
         
@@ -107,13 +163,14 @@ def match():
             raise
         
         return send_file(matched_image_path, mimetype='image/jpeg')
-        """return jsonify({
+        return jsonify({
             'matched_label': match_label,
             'matched_probability': match_probability,
             'given_image_path': temp_image_path,
             'matched_image_path': matched_image_path
-        })"""
+        })
     return jsonify({'error': 'No image provided'}), 400
+"""
 
 @app.route('/images/<path:image_path>')
 def serve_image(image_path):
