@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition System</title>
+</head>
+<body>
+    <h1>Face Recognition System</h1>
+    <h2>Registered Labels</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th>Place</th>
+                <th>Date</th>
+                <th>Image</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr>
+                <td>{{ record[1] }}</td>
+                <td>{{ record[2] }}</td>
+                <td>{{ record[3] }}</td>
+                <td><img src="{{ url_for('static', filename=record[4]) }}" alt="Image" style="width:100px;height:100px;"></td>
+                <td>
+                    <form action="{{ url_for('update') }}" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="id" value="{{ record[0] }}">
+                        <button type="submit">Edit</button>
+                    </form>
+                </td>
+                <td>
+                    <form action="{{ url_for('delete') }}" method="POST">
+                        <input type="hidden" name="id" value="{{ record[0] }}">
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Add New Record</h2>
+    <form action="{{ url_for('submit') }}" method="POST" enctype="multipart/form-data">
+        <label for="label">Label:</label>
+        <input type="text" id="label" name="label" required><br>
+        <label for="place">Place:</label>
+        <input type="text" id="place" name="place" required><br>
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required><br>
+        <label for="image">Image:</label>
+        <input type="file" id="image" name="image" required><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <h2>Match Image</h2>
+    <form action="{{ url_for('match') }}" method="POST" enctype="multipart/form-data">
+        <label for="match_image">Select Image:</label>
+        <input type="file" id="match_image" name="image" required><br>
+        <button type="submit">Match</button>
+    </form>
+</body>
+</html>

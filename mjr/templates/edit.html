@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Record</title>
+</head>
+<body>
+    <h1>Edit Record</h1>
+    <form action="{{ url_for('update') }}" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="{{ record.id }}">
+        <label for="label">Label:</label>
+        <input type="text" id="label" name="label" value="{{ record.label }}" required><br>
+        <label for="place">Place:</label>
+        <input type="text" id="place" name="place" value="{{ record.place }}" required><br>
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" value="{{ record.date }}" required><br>
+        <label for="image">Image:</label>
+        <input type="file" id="image" name="image"><br>
+        <button type="submit">Update</button>
+    </form>
+</body>
+</html>
