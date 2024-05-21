@@ -8,6 +8,8 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import LabelEncoder
 import os
 
+from sklearn.svm import SVC
+
 from database import connect_to_database
 
 def extract_face_from_path(filepath, required_size=(160, 160)):
@@ -76,12 +78,20 @@ def find_match(image_path):
 
     model = GaussianNB()
     model.fit(emdTrainX_norm, trainy)
+
+    # Train SVM model
+    svm_model = SVC(probability=True)
+    svm_model.fit(emdTrainX_norm, trainy)
     
     embedding_norm = in_encoder.transform(np.expand_dims(embedding, axis=0))
     yhat_prob = model.predict_proba(embedding_norm)
     
     class_index = np.argmax(yhat_prob)
     class_probability = yhat_prob[0, class_index] * 100
+    # Predict using SVM
+    yhat_prob_svm = svm_model.predict_proba(embedding_norm)
+    class_index_svm = np.argmax(yhat_prob_svm)
+    class_probability_svm = yhat_prob_svm[0, class_index_svm] * 100
     return int(class_index), float(class_probability)
 
 """def find_match(image_path):

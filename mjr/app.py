@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, send_file, url_for, jsonify
+from flask import Flask, render_template, request, redirect, send_file, url_for, jsonify,session
 import os
 from matplotlib import pyplot as plt
 import numpy as np
@@ -9,9 +9,63 @@ from PIL import Image
 from io import BytesIO
 from flask_cors import CORS
 from flask import send_file
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 app = Flask(__name__)
 CORS(app)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
+"""
+app.secret_key = 'your_secret_key'
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+users = {
+    "admin": {"password": "adminpass", "role": "admin"},
+    "user": {"password": "userpass", "role": "user"}
+}
+
+class User(UserMixin):
+    def __init__(self, username):
+        self.id = username
+        self.role = users[username]["role"]
+
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id in users:
+        return User(user_id)
+    return None
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+    if username in users and users[username]["password"] == password:
+        user = User(username)
+        login_user(user)
+        return jsonify({"message": "Login successful", "role": user.role})
+    return jsonify({"message": "Invalid credentials"}), 401
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"message": "Logged out"})
+
+@app.route('/delete', methods=['POST'])
+@login_required
+def delete():
+    if current_user.role != 'admin':
+        return jsonify({"message": "Unauthorized"}), 403
+    data = request.json
+    item_id = data.get('id')
+    # Your deletion logic here
+    delete_record(item_id)
+    train_model()  # Train model after deleting data
+    #return redirect(url_for('index'))
+    return jsonify({"message": "Item deleted successfully"})
+"""
 
 @app.route('/')
 def index():
@@ -111,9 +165,9 @@ def match():
             print(f"Error opening image: {e}")
             raise
         
-        if match_probability > 0.8:
+        if match_probability > 80:
             status = "Exact match found"
-        elif match_probability > 0.5:
+        elif match_probability > 50:
             status = "Probable match found"
         else:
             status = "No match found"
@@ -125,7 +179,7 @@ def match():
             'status': status,
             'matched_label': match_label,
             'matched_probability': match_probability,
-            'matched_image_url': matched_image_path if match_probability > 0.5 else None
+            'matched_image_url': matched_image_path if match_probability > 50 else None
             
         })
     return jsonify({'error': 'No image provided'}), 400
