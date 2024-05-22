@@ -10,11 +10,13 @@ from io import BytesIO
 from flask_cors import CORS
 from flask import send_file
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.utils import secure_filename
 app = Flask(__name__)
-CORS(app)
+# Update CORS configuration
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
+
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
-"""
 app.secret_key = 'your_secret_key'
 
 login_manager = LoginManager()
@@ -44,7 +46,8 @@ def login():
     if username in users and users[username]["password"] == password:
         user = User(username)
         login_user(user)
-        return jsonify({"message": "Login successful", "role": user.role})
+        session['role'] = user.role
+        return jsonify({"message": "Login successful", "role": user.role}), 200
     return jsonify({"message": "Invalid credentials"}), 401
 
 @app.route('/logout')
@@ -52,6 +55,12 @@ def login():
 def logout():
     logout_user()
     return jsonify({"message": "Logged out"})
+
+@app.route('/records', methods=['GET'])
+@login_required
+def get_records():
+    records = get_all_records()
+    return jsonify({"records": records, "role": current_user.role})
 
 @app.route('/delete', methods=['POST'])
 @login_required
@@ -65,7 +74,7 @@ def delete():
     train_model()  # Train model after deleting data
     #return redirect(url_for('index'))
     return jsonify({"message": "Item deleted successfully"})
-"""
+
 
 @app.route('/')
 def index():
@@ -73,7 +82,10 @@ def index():
     return render_template('index.html', records=records)
 
 @app.route('/submit', methods=['POST'])
+@login_required
 def submit():
+    if current_user.role != 'admin':
+        return jsonify({"message": "Unauthorized"}), 403
     label = request.form['label']
     place = request.form['place']
     date = request.form['date']
@@ -91,7 +103,10 @@ def submit():
     return redirect(url_for('index'))
 
 @app.route('/update', methods=['POST'])
+@login_required
 def update():
+    if current_user.role != 'admin':
+        return jsonify({"message": "Unauthorized"}), 403
     record_id = request.form['id']
     label = request.form['label']
     place = request.form['place']
@@ -109,14 +124,15 @@ def update():
     train_model()  # Train model after updating data
 
     return redirect(url_for('index'))
-
+"""
 @app.route('/delete', methods=['POST'])
 def delete():
     record_id = request.json.get('id')
     #record_id = request.form['id']
     delete_record(record_id)
     train_model()  # Train model after deleting data
-    return redirect(url_for('index'))
+    return redirect(url_for('index'))"""
+
 
 @app.route('/register-data', methods=['GET'])
 def get_register_data():
