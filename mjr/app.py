@@ -96,7 +96,6 @@ def submit():
         os.makedirs(folder_path, exist_ok=True)
         image_path = os.path.join(folder_path, image_file.filename)
         image_file.save(image_path)
-
         insert_record(label, place, date, image_path)
         train_model()  # Train model after adding new data
 
